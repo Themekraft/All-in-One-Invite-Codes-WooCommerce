@@ -55,11 +55,14 @@ function all_in_one_invite_codes_checkout_field( $checkout ) {
 	endif;
 
 	$invite_only_in_cart = false;
-	foreach ( $product_ids as $product_id ){
-		if(all_in_one_invite_is_conditional_product_in_cart( $product_id )){
-			$invite_only_in_cart = true;
-		};
+	if($product_ids){
+		foreach ( $product_ids as $product_id ){
+			if(all_in_one_invite_is_conditional_product_in_cart( $product_id )){
+				$invite_only_in_cart = true;
+			}
+		}
 	}
+
 
 	if ( $invite_only_in_cart === true ) {
 		echo '<div id="all_in_one_invite_code"><h3>' . __( 'Invite Only Product' ) . '</h3><p style="margin: 0 0 8px;">Please add your invite code here!</p>';
@@ -140,10 +143,12 @@ function all_in_one_invite_codes_order_mail_meta_keys( $keys ) {
 	endif;
 
 	$invite_only_in_cart = false;
-	foreach ( $product_ids as $product_id ){
-		if(all_in_one_invite_is_conditional_product_in_cart( $product_id )){
-			$invite_only_in_cart = true;
-		};
+	if($product_ids){
+		foreach ( $product_ids as $product_id ){
+			if(all_in_one_invite_is_conditional_product_in_cart( $product_id )){
+				$invite_only_in_cart = true;
+			}
+		}
 	}
 
 	if ( $invite_only_in_cart === true ) {

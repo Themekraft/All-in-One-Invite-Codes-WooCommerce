@@ -38,18 +38,37 @@ add_action( 'woocommerce_after_order_notes', 'all_in_one_invite_codes_checkout_f
 
 function all_in_one_invite_codes_checkout_field( $checkout ) {
 
-	//Check if Book in Cart (UPDATE WITH YOUR PRODUCT ID)
-	$book_in_cart = all_in_one_invite_is_conditional_product_in_cart( 1663 );
+	$products = new WP_Query( array(
+		'post_type'      => array('product'),
+		'post_status'    => 'publish',
+		'posts_per_page' => -1,
+		'meta_query'     => array( array(
+			'key' => 'invite_only',
+		) ),
+	) );
 
-	//Book is in cart so show additional fields
-	if ( $book_in_cart === true ) {
+	if ( $products->have_posts() ): while ( $products->have_posts() ):
+		$products->the_post();
+		$product_ids[] = $products->post->ID;
+	endwhile;
+		wp_reset_postdata();
+	endif;
+
+	$invite_only_in_cart = false;
+	foreach ( $product_ids as $product_id ){
+		if(all_in_one_invite_is_conditional_product_in_cart( $product_id )){
+			$invite_only_in_cart = true;
+		};
+	}
+
+	if ( $invite_only_in_cart === true ) {
 		echo '<div id="all_in_one_invite_code"><h3>' . __( 'Invite Only Product' ) . '</h3><p style="margin: 0 0 8px;">Please add your invite code here!</p>';
 
 
 		woocommerce_form_field( 'all_in_one_invite_codes_woo_product', array(
 			'type'  => 'text',
 			'class' => array( 'inscription-text form-row-wide' ),
-			'label' => __( 'To whom should the inscription be made?' ),
+			'label' => __( 'Invite Code' ),
 			'required' => 'true'
 		), $checkout->get_value( 'all_in_one_invite_codes_woo_product' ) );
 
@@ -68,18 +87,18 @@ function all_in_one_invite_codes_checkout_field( $checkout ) {
 function all_in_one_invite_is_conditional_product_in_cart( $product_id ) {
 	global $woocommerce;
 
-	$book_in_cart = false;
+	$invite_only_in_cart = false;
 
 	foreach ( $woocommerce->cart->get_cart() as $cart_item_key => $values ) {
 		$_product = $values['data'];
 
 		if ( $_product->id === $product_id ) {
-			$book_in_cart = true;
+			$invite_only_in_cart = true;
 
 		}
 	}
 
-	return $book_in_cart;
+	return $invite_only_in_cart;
 
 }
 
@@ -103,10 +122,31 @@ function all_in_one_invite_codes_order_mail_meta_keys( $keys ) {
 	if( ! is_checkout()){
 		return;
 	}
-	//Check if in Cart
-	$in_cart = all_in_one_invite_is_conditional_product_in_cart( 1663 );
 
-	if ( $in_cart === true ) {
+	$products = new WP_Query( array(
+		'post_type'      => array('product'),
+		'post_status'    => 'publish',
+		'posts_per_page' => -1,
+		'meta_query'     => array( array(
+			'key' => 'invite_only',
+		) ),
+	) );
+
+	if ( $products->have_posts() ): while ( $products->have_posts() ):
+		$products->the_post();
+		$product_ids[] = $products->post->ID;
+	endwhile;
+		wp_reset_postdata();
+	endif;
+
+	$invite_only_in_cart = false;
+	foreach ( $product_ids as $product_id ){
+		if(all_in_one_invite_is_conditional_product_in_cart( $product_id )){
+			$invite_only_in_cart = true;
+		};
+	}
+
+	if ( $invite_only_in_cart === true ) {
 		$keys['Invite Code'] = 'all_in_one_invite_codes_woo_product';
 	}
 

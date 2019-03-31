@@ -39,12 +39,14 @@ add_action( 'woocommerce_after_order_notes', 'all_in_one_invite_codes_checkout_f
 function all_in_one_invite_codes_checkout_field( $checkout ) {
 
 	$products = new WP_Query( array(
-		'post_type'      => array('product'),
+		'post_type'      => array( 'product' ),
 		'post_status'    => 'publish',
-		'posts_per_page' => -1,
-		'meta_query'     => array( array(
-			'key' => 'invite_only',
-		) ),
+		'posts_per_page' => - 1,
+		'meta_query'     => array(
+			array(
+				'key' => 'invite_only',
+			)
+		),
 	) );
 
 	if ( $products->have_posts() ): while ( $products->have_posts() ):
@@ -55,9 +57,9 @@ function all_in_one_invite_codes_checkout_field( $checkout ) {
 	endif;
 
 	$invite_only_in_cart = false;
-	if($product_ids){
-		foreach ( $product_ids as $product_id ){
-			if(all_in_one_invite_is_conditional_product_in_cart( $product_id )){
+	if ( $product_ids ) {
+		foreach ( $product_ids as $product_id ) {
+			if ( all_in_one_invite_is_conditional_product_in_cart( $product_id ) ) {
 				$invite_only_in_cart = true;
 			}
 		}
@@ -69,9 +71,9 @@ function all_in_one_invite_codes_checkout_field( $checkout ) {
 
 
 		woocommerce_form_field( 'all_in_one_invite_codes_woo_product', array(
-			'type'  => 'text',
-			'class' => array( 'inscription-text form-row-wide' ),
-			'label' => __( 'Invite Code' ),
+			'type'     => 'text',
+			'class'    => array( 'inscription-text form-row-wide' ),
+			'label'    => __( 'Invite Code' ),
 			'required' => 'true'
 		), $checkout->get_value( 'all_in_one_invite_codes_woo_product' ) );
 
@@ -122,17 +124,19 @@ add_filter( 'woocommerce_email_order_meta_keys', 'all_in_one_invite_codes_order_
 function all_in_one_invite_codes_order_mail_meta_keys( $keys ) {
 
 
-	if( ! is_checkout()){
+	if ( ! is_checkout() ) {
 		return;
 	}
 
 	$products = new WP_Query( array(
-		'post_type'      => array('product'),
+		'post_type'      => array( 'product' ),
 		'post_status'    => 'publish',
-		'posts_per_page' => -1,
-		'meta_query'     => array( array(
-			'key' => 'invite_only',
-		) ),
+		'posts_per_page' => - 1,
+		'meta_query'     => array(
+			array(
+				'key' => 'invite_only',
+			)
+		),
 	) );
 
 	if ( $products->have_posts() ): while ( $products->have_posts() ):
@@ -143,9 +147,9 @@ function all_in_one_invite_codes_order_mail_meta_keys( $keys ) {
 	endif;
 
 	$invite_only_in_cart = false;
-	if($product_ids){
-		foreach ( $product_ids as $product_id ){
-			if(all_in_one_invite_is_conditional_product_in_cart( $product_id )){
+	if ( $product_ids ) {
+		foreach ( $product_ids as $product_id ) {
+			if ( all_in_one_invite_is_conditional_product_in_cart( $product_id ) ) {
 				$invite_only_in_cart = true;
 			}
 		}
@@ -158,27 +162,24 @@ function all_in_one_invite_codes_order_mail_meta_keys( $keys ) {
 	return $keys;
 }
 
-add_action('woocommerce_checkout_process', 'all_in_one_invite_codes_woo_checkout_validateion');
-
+add_action( 'woocommerce_checkout_process', 'all_in_one_invite_codes_woo_checkout_validateion' );
 function all_in_one_invite_codes_woo_checkout_validateion() {
 
 	// you can add any custom validations here
-	if ( ! empty( $_POST['all_in_one_invite_codes_woo_product'] ) ){
+	if ( ! empty( $_POST['all_in_one_invite_codes_woo_product'] ) ) {
 
-		$result = all_in_one_invite_codes_validate_code( $_POST['all_in_one_invite_codes_woo_product' ], $_POST[ 'billing_email' ] );
+		$result = all_in_one_invite_codes_validate_code( $_POST['all_in_one_invite_codes_woo_product'], $_POST['billing_email'] );
 
 		if ( isset( $result['error'] ) ) {
 			wc_add_notice( $result['error'], 'error' );
 		}
 
 	} else {
-		wc_add_notice( __('This Product needs an invitation. Please enter a valid invite code!'), 'error' );
+		wc_add_notice( __( 'This Product needs an invitation. Please enter a valid invite code!' ), 'error' );
 	}
 
 
 }
-
-
 
 
 /**
@@ -187,18 +188,18 @@ function all_in_one_invite_codes_woo_checkout_validateion() {
  * @since  0.1
  *
  */
+add_action( 'woocommerce_order_status_completed', 'all_in_one_invite_code_woo_payment_complete' );
 function all_in_one_invite_code_woo_payment_complete( $order_id ) {
 
 
-	$order = wc_get_order( $order_id );
-	$user = $order->get_user();
+	$order   = wc_get_order( $order_id );
+	$user    = $order->get_user();
 	$user_id = $user->ID;
-	if( $user ){
+	if ( $user ) {
 		$code = get_post_meta( $order_id, 'all_in_one_invite_codes_woo_product', true );
 
-
-		// Save the invite code as user meta data to know the relation for later query's/ stats
-		update_user_meta( $user->ID, 'tk_all_in_one_invite_code', $code );
+		$tk_invite_code[] = sanitize_text_field( $_POST['tk_invite_code'] );
+		update_user_meta( $user_id, 'tk_all_in_one_invite_code', $tk_invite_code );
 
 		// Get the invite code
 		$args  = array(
@@ -252,4 +253,12 @@ function all_in_one_invite_code_woo_payment_complete( $order_id ) {
 
 }
 
-add_action( 'woocommerce_order_status_completed', 'all_in_one_invite_code_woo_payment_complete' );
+
+
+add_filter( 'all_in_one_invite_codes_options_type_options', 'all_in_one_invite_codes_woocommerce_options_type_options' );
+function all_in_one_invite_codes_woocommerce_options_type_options( $options ) {
+
+	$options['woocommerce_checkout'] = 'WooCommerce Purchase Complete';
+	return $options;
+
+}

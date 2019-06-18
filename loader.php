@@ -4,7 +4,7 @@
  * Plugin Name: All in One Invite Codes WooCommerce
  * Plugin URI:  https://themekraft.com/all-in-one-invite-codes/
  * Description: Create Invite only Products with WooCommerce
- * Version: 0.1
+ * Version: 1.0 beta 1
  * Author: ThemeKraft
  * Author URI: https://themekraft.com/
  * Licence: GPLv3
@@ -261,4 +261,101 @@ function all_in_one_invite_codes_woocommerce_options_type_options( $options ) {
 	$options['woocommerce_checkout'] = 'WooCommerce Purchase Complete';
 	return $options;
 
+}
+
+if ( ! function_exists( 'wc_fs' ) ) {
+	// Create a helper function for easy SDK access.
+	function wc_fs() {
+		global $wc_fs;
+
+		if ( ! isset( $wc_fs ) ) {
+			// Include Freemius SDK.
+			if ( file_exists( dirname( dirname( __FILE__ ) ) . '/all-in-one-invite-codes/includes/resources/freemius/start.php' ) ) {
+				// Try to load SDK from parent plugin folder.
+				require_once dirname( dirname( __FILE__ ) ) . '/all-in-one-invite-codes/includes/resources/freemius/start.php';
+			} elseif ( file_exists( dirname( dirname( __FILE__ ) ) . '/all-in-one-invite-codes-premium/includes/resources/freemius/start.php' ) ) {
+				// Try to load SDK from premium parent plugin folder.
+				require_once dirname( dirname( __FILE__ ) ) . '/all-in-one-invite-codes-premium/includes/resources/freemius/start.php';
+			}
+
+			$wc_fs = fs_dynamic_init( array(
+				'id'                  => '3326',
+				'slug'                => 'woocommerce-checkout',
+				'type'                => 'plugin',
+				'public_key'          => 'pk_2386bde4e0f20f447639c236a33a8',
+				'is_premium'          => true,
+				'is_premium_only'     => true,
+				'has_paid_plans'      => true,
+				'is_org_compliant'    => false,
+				'trial'               => array(
+					'days'               => 7,
+					'is_require_payment' => false,
+				),
+				'parent'              => array(
+					'id'         => '3322',
+					'slug'       => 'all-in-one-invite-codes',
+					'public_key' => 'pk_955be38b0c4d2a2914a9f4bc98355',
+					'name'       => 'All in One Invite Codes',
+				),
+				'menu'                => array(
+					'first-path'     => 'plugins.php',
+					'support'        => false,
+				),
+			) );
+		}
+
+		return $wc_fs;
+	}
+}
+
+
+function wc_fs_is_parent_active_and_loaded() {
+	// Check if the parent's init SDK method exists.
+	return function_exists( 'all_in_one_invite_codes_core_fs' );
+}
+
+function wc_fs_is_parent_active() {
+	$active_plugins = get_option( 'active_plugins', array() );
+
+	if ( is_multisite() ) {
+		$network_active_plugins = get_site_option( 'active_sitewide_plugins', array() );
+		$active_plugins         = array_merge( $active_plugins, array_keys( $network_active_plugins ) );
+	}
+
+	foreach ( $active_plugins as $basename ) {
+		if ( 0 === strpos( $basename, 'all-in-one-invite-codes/' ) ||
+		     0 === strpos( $basename, 'all-in-one-invite-codes-premium/' )
+		) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+function wc_fs_init() {
+	if ( wc_fs_is_parent_active_and_loaded() ) {
+		// Init Freemius.
+		wc_fs();
+
+
+		// Signal that the add-on's SDK was initiated.
+		do_action( 'wc_fs_loaded' );
+
+		// Parent is active, add your init code here.
+
+	} else {
+		// Parent is inactive, add your error handling here.
+	}
+}
+
+if ( wc_fs_is_parent_active_and_loaded() ) {
+	// If parent already included, init add-on.
+	wc_fs_init();
+} else if ( wc_fs_is_parent_active() ) {
+	// Init add-on only after the parent is loaded.
+	add_action( 'all_in_one_invite_codes_core_fs_loaded', 'wc_fs_init' );
+} else {
+	// Even though the parent is not activated, execute add-on for activation / uninstall hooks.
+	wc_fs_init();
 }

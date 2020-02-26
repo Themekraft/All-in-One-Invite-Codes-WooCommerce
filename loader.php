@@ -31,40 +31,89 @@
  */
 
 
+
+add_filter( 'woocommerce_product_data_tabs',  'addInviteCodeSection' , 10, 1 ); // Add section
+add_action( 'woocommerce_product_data_panels',  'addInviteCodeTabContent' );// Add Section Tab content
+add_action( 'woocommerce_process_product_meta', 'saveProductOptionsFields' , 12, 2 ); // Save option
+
+ function saveProductOptionsFields( $post_id, $post ) {
+
+     $product = wc_get_product( $post_id );
+
+     if ( empty( $product ) ) {
+         return;
+     }
+     $type = $product->get_type();
+
+     $invite_only = isset($_POST['invite_only'])? $_POST['invite_only'] : false;
+     if ($invite_only){
+         update_post_meta( $post_id, 'invite_code', $invite_only);
+     }
+     else{
+         delete_post_meta($post_id,'invite_code');
+     }
+}
+
+
+/**
+ * Add content to generated tab
+ */
+ function addInviteCodeTabContent() {
+
+     $product_id = isset($_GET['post']) ? $_GET['post'] : false;
+     $is_checked = '';
+     if ($product_id){
+
+         $result = get_post_meta( $product_id, 'invite_code', true);
+         if ($result=='on'){
+             $is_checked = 'checked="true"';
+         }
+     }
+     echo '<div id="invite-code" class="panel woocommerce_options_panel wc-metaboxes-wrapper">';
+
+     echo '<p class="form-field"><label style="width: 50%"> Make this product invite only  :</label>  <input style="margin-right: 15px;" type="checkbox" name="invite_only"'.$is_checked.' > <i> This will add an invite validation to the checkout </i></p>';
+     echo '</div>';
+
+}
+
+/**
+ * Add new tab to general product tabs
+ *
+ * @param $sections
+ *
+ * @return mixed
+ */
+ function addInviteCodeSection( $sections ) {
+
+
+    $sections[ 'invite-code' ] = array(
+        'label'  => 'Invite Code',
+        'target' => 'invite-code',
+        'class'  => array(),
+    );
+
+    return $sections;
+}
+
 /**
  * Add the field to the checkout
  **/
 add_action( 'woocommerce_after_order_notes', 'all_in_one_invite_codes_checkout_field' );
 
+
 function all_in_one_invite_codes_checkout_field( $checkout ) {
+    global $woocommerce;
+    $invite_only_in_cart = false;
+    foreach ( $woocommerce->cart->get_cart() as $cart_item_key => $values ) {
+        $_product = $values['data'];
 
-	$products = new WP_Query( array(
-		'post_type'      => array( 'product' ),
-		'post_status'    => 'publish',
-		'posts_per_page' => - 1,
-		'meta_query'     => array(
-			array(
-				'key' => 'invite_only',
-			)
-		),
-	) );
-
-	if ( $products->have_posts() ): while ( $products->have_posts() ):
-		$products->the_post();
-		$product_ids[] = $products->post->ID;
-	endwhile;
-		wp_reset_postdata();
-	endif;
-
-	$invite_only_in_cart = false;
-	if ( $product_ids ) {
-		foreach ( $product_ids as $product_id ) {
-			if ( all_in_one_invite_is_conditional_product_in_cart( $product_id ) ) {
-				$invite_only_in_cart = true;
-			}
-		}
-	}
-
+        if ( $_product->id  ) {
+            $result = get_post_meta( $_product->id , 'invite_code', true);
+            if($result == 'on')
+            $invite_only_in_cart = true;
+            break;
+        }
+    }
 
 	if ( $invite_only_in_cart === true ) {
 		echo '<div id="all_in_one_invite_code"><h3>' . __( 'Invite Only Product' ) . '</h3><p style="margin: 0 0 8px;">Please add your invite code here!</p>';
@@ -168,7 +217,7 @@ function all_in_one_invite_codes_woo_checkout_validateion() {
 	// you can add any custom validations here
 	if ( ! empty( $_POST['all_in_one_invite_codes_woo_product'] ) ) {
 
-		$result = all_in_one_invite_codes_validate_code( $_POST['all_in_one_invite_codes_woo_product'], $_POST['billing_email'] );
+		$result = all_in_one_invite_codes_validate_code( $_POST['all_in_one_invite_codes_woo_product'], $_POST['billing_email'] ,'woocommerce_checkout');
 
 		if ( isset( $result['error'] ) ) {
 			wc_add_notice( $result['error'], 'error' );

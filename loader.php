@@ -2,14 +2,14 @@
 
 /**
  * Plugin Name: All in One Invite Codes WooCommerce
- * Plugin URI:  https://themekraft.com/all-in-one-invite-codes/
+ * Plugin URI: https://themekraft.com/products/all-in-one-invite-codes-woocommerce/
  * Description: Create Invite only Products with WooCommerce
  * Version: 1.0 beta 1
  * Author: ThemeKraft
  * Author URI: https://themekraft.com/
  * Licence: GPLv3
  * Network: false
- * Text Domain: all-in-one-invite-codes
+ * Text Domain: all-in-one-invite-codes-woocommerce
  *
  * ****************************************************************************
  *
@@ -31,6 +31,10 @@
  */
 
 
+
+ function load_plugin_textdomain() {
+    load_plugin_textdomain( 'all-in-one-invite-codes-woocommerce', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+}
 
 add_filter( 'woocommerce_product_data_tabs',  'addInviteCodeSection' , 10, 1 ); // Add section
 add_action( 'woocommerce_product_data_panels',  'addInviteCodeTabContent' );// Add Section Tab content
@@ -71,7 +75,7 @@ add_action( 'woocommerce_process_product_meta', 'saveProductOptionsFields' , 12,
      }
      echo '<div id="invite-code" class="panel woocommerce_options_panel wc-metaboxes-wrapper">';
 
-     echo '<p class="form-field"><label style="width: 50%"> Make this product invite only  :</label>  <input style="margin-right: 15px;" type="checkbox" name="invite_only"'.$is_checked.' > <i> This will add an invite validation to the checkout </i></p>';
+     echo '<p class="form-field"><label style="width: 50%">' . __('Make this product invite only ','all-in-one-invite-codes-woocommerce') .' :</label>  <input style="margin-right: 15px;" type="checkbox" name="invite_only"'.$is_checked.' > <i> '.__('This will add an invite validation to the checkout','all-in-one-invite-codes-woocommerce').' </i></p>';
      echo '</div>';
 
 }
@@ -116,7 +120,7 @@ function all_in_one_invite_codes_checkout_field( $checkout ) {
     }
 
 	if ( $invite_only_in_cart === true ) {
-		echo '<div id="all_in_one_invite_code"><h3>' . __( 'Invite Only Product' ) . '</h3><p style="margin: 0 0 8px;">Please add your invite code here!</p>';
+		echo '<div id="all_in_one_invite_code"><h3>' . __( 'Invite Only Product','all-in-one-invite-codes-woocommerce' ) . '</h3><p style="margin: 0 0 8px;">'.__('Please add your invite code here','all-in-one-invite-codes-woocommerce').'!</p>';
 
 
 		woocommerce_form_field( 'all_in_one_invite_codes_woo_product', array(
@@ -224,7 +228,7 @@ function all_in_one_invite_codes_woo_checkout_validateion() {
 		}
 
 	} else {
-		wc_add_notice( __( 'This Product needs an invitation. Please enter a valid invite code!' ), 'error' );
+		wc_add_notice( __( 'This Product needs an invitation. Please enter a valid invite code!' ,'all-in-one-invite-codes-woocommerce'), 'error' );
 	}
 
 

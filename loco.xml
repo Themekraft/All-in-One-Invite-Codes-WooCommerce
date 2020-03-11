@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<bundle name="All in One Invite Codes WooCommerce">
+  <domain name="all-in-one-invite-codes-woocommerce">
+    <project name="All in One Invite Codes WooCommerce" slug="all-in-one-invite-codes-woocommerce">
+      <source>
+        <directory>.</directory>
+      </source>
+      <target>
+        <directory>languages</directory>
+      </target>
+      <template>
+        <file>languages/all-in-one-invite-codes-woocommerce.pot</file>
+      </template>
+    </project>
+  </domain>
+</bundle>

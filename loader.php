@@ -115,8 +115,9 @@ function all_in_one_invite_codes_checkout_field( $checkout ) {
 			$result = get_post_meta( $_product->id, 'invite_code', true );
 			if ( $result == 'on' ) {
 				$invite_only_in_cart = true;
+                break;
 			}
-			break;
+
 		}
 	}
 
@@ -216,21 +217,27 @@ function all_in_one_invite_codes_order_mail_meta_keys( $keys ) {
 	return $keys;
 }
 
-add_action( 'woocommerce_checkout_process', 'all_in_one_invite_codes_woo_checkout_validateion' );
-function all_in_one_invite_codes_woo_checkout_validateion() {
+add_action( 'woocommerce_checkout_process', 'all_in_one_invite_codes_woo_checkout_validation' );
+function all_in_one_invite_codes_woo_checkout_validation() {
 
 	// you can add any custom validations here
-	if ( ! empty( $_POST['all_in_one_invite_codes_woo_product'] ) ) {
+    if(isset( $_POST['all_in_one_invite_codes_woo_product'] )) {
 
-		$result = all_in_one_invite_codes_validate_code( $_POST['all_in_one_invite_codes_woo_product'], $_POST['billing_email'], 'woocommerce_checkout' );
 
-		if ( isset( $result['error'] ) ) {
-			wc_add_notice( $result['error'], 'error' );
-		}
+        if (!empty($_POST['all_in_one_invite_codes_woo_product'])) {
 
-	} else {
-		wc_add_notice( __( 'This Product needs an invitation. Please enter a valid invite code!', 'all-in-one-invite-codes-woocommerce' ), 'error' );
-	}
+            $result = all_in_one_invite_codes_validate_code($_POST['all_in_one_invite_codes_woo_product'], $_POST['billing_email'], 'woocommerce_checkout');
+
+            if (isset($result['error'])) {
+                wc_add_notice($result['error'], 'error');
+            }
+
+        }
+        else{
+
+            wc_add_notice( __( 'This Product needs an invitation. Please enter a valid invite code!', 'all-in-one-invite-codes-woocommerce' ), 'error' );
+        }
+    }
 
 
 }

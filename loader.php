@@ -40,6 +40,51 @@ add_action( 'init', 'aioic_woocommerce_load_plugin_textdomain' );
 add_filter( 'woocommerce_product_data_tabs', 'addInviteCodeSection', 10, 1 ); // Add section
 add_action( 'woocommerce_product_data_panels', 'addInviteCodeTabContent' );// Add Section Tab content
 add_action( 'woocommerce_process_product_meta', 'saveProductOptionsFields', 12, 2 ); // Save option
+add_action( 'woocommerce_thankyou',  'aioic_woocommerce_purchase_complete');
+
+function aioic_woocommerce_purchase_complete($order_id){
+
+    $order = wc_get_order( $order_id );
+    $order_meta =  $order->get_meta_data();
+    $invite_code = false;
+    foreach ($order_meta as $index=>$value){
+
+        $current_data= $value->get_data();
+        if (isset($current_data['key']) && $current_data['key']=="all_in_one_invite_codes_woo_product"){
+
+            $invite_code =  isset($current_data['value']) ? $current_data['value'] : false;
+            break;
+
+        }
+
+    }
+    if($invite_code){
+        // Get all invite codes with this code. Should only be one post.
+        $args  = array(
+            'post_type'  => 'tk_invite_codes',
+            'meta_query' => array(
+                array(
+                    'key'     => 'tk_all_in_one_invite_code',
+                    'value'   => $invite_code,
+                    'compare' => '=',
+                )
+            )
+        );
+        $query = new WP_Query( $args );
+        // If have posts means we have a valid code.
+        if ( $query->have_posts() ) {
+
+            $post_id = $query->get_posts()[0]->ID;
+
+            update_post_meta( $post_id, 'tk_all_in_one_invite_code_status', 'Used' );
+        }
+
+
+    }
+
+
+
+}
 
 function saveProductOptionsFields( $post_id, $post ) {
 

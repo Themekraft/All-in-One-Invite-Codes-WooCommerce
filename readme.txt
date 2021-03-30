@@ -13,3 +13,17 @@ Create invite only products
 == Description ==
 
 Use Invite Codes in your Checkout
+
+== Changelog ==
+= 1.0.2 - 30 March  2021 =
+* Fixed Added translate format to the plugin messages and labels.
+* Fixed Added the localization files.
+* Fixed Updated the language files.
+* Fixed check if in a loop at least one product is set as invite only
+* Feature Set the 'Used' to a invite code after the order is placed.
+
+
+
+
+
+

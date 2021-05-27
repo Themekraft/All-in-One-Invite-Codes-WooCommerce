@@ -368,6 +368,14 @@ function all_in_one_invite_codes_woocommerce_options_type_options( $options ) {
 	return $options;
 
 }
+add_filter( 'all_in_one_invite_codes_options_email_templates', 'all_in_one_invite_codes_woocommerce_options_email_templates' );
+function all_in_one_invite_codes_woocommerce_options_email_templates( $options ) {
+
+    $options['woocommerce_checkout'] = __('WooCommerce Email Template','all-in-one-invite-codes');
+
+    return $options;
+
+}
 
 if ( ! function_exists( 'wc_fs' ) ) {
 	// Create a helper function for easy SDK access.

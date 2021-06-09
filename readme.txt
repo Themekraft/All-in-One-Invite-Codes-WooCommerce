@@ -2,9 +2,9 @@
 Contributors: svenl77, gfirem, vmarin
 Tags: registration, invite only, invite codes,
 Requires at least: 4.9
-Tested up to: 5.7
+Tested up to: 5.7.2
 Requires PHP: 5.3
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPL 3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -15,6 +15,9 @@ Create invite only products
 Use Invite Codes in your Checkout
 
 == Changelog ==
+= 1.0.3 - 09 June   2021 =
+*Feature: Added custom email option
+
 = 1.0.2 - 30 March  2021 =
 * Fixed Added translate format to the plugin messages and labels.
 * Fixed Added the localization files.

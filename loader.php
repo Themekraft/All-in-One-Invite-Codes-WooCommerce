@@ -36,15 +36,60 @@ function aioic_woocommerce_load_plugin_textdomain() {
 	load_plugin_textdomain( 'all-in-one-invite-codes-woocommerce', false, basename( dirname( __FILE__ ) ) . '/languages' );
 }
 add_action( 'init', 'aioic_woocommerce_load_plugin_textdomain' );
+add_action('admin_enqueue_scripts', 'aioic_woocommerce_admin_scripts', 100, 1);
 
 add_filter( 'woocommerce_product_data_tabs', 'addInviteCodeSection', 10, 1 ); // Add section
 add_action( 'woocommerce_product_data_panels', 'addInviteCodeTabContent' );// Add Section Tab content
 add_action( 'woocommerce_process_product_meta', 'saveProductOptionsFields', 12, 2 ); // Save option
 add_action( 'woocommerce_thankyou',  'aioic_woocommerce_purchase_complete');
 
+function aioic_woocommerce_admin_scripts(){
+	wp_enqueue_script('aioic_woocommerce_admin',  plugins_url('/', __FILE__) . 'assets/js/aioic_woocommerce.js', array('jquery'), false, true);
+}
+
 function aioic_woocommerce_purchase_complete($order_id){
 
     $order = wc_get_order( $order_id );
+    // Get and Loop Over Order Items
+    foreach ( $order->get_items() as $item_id => $item ) {
+        $product_id = $item->get_product_id();
+        $is_sell_invite_code = get_post_meta( $product_id, 'sell_invite_code', true );
+        if ( $is_sell_invite_code == 'on' ) {
+            $generate_invite_code = get_post_meta( $product_id, 'invites_codes_amount', true );
+            $user_id = get_current_user_id();
+            $args        = array(
+                'post_type'   => 'tk_invite_codes',
+                'post_author' => $user_id,
+
+                'post_status' => 'publish',
+                'post_title'  => '',
+            );
+            $new_code_id = wp_insert_post( $args );
+
+            // Create and save the new invite code as post meta
+            $code = all_in_one_invite_codes_md5( $new_code_id );
+            $code = wp_filter_post_kses( $code );
+
+            $args        = array(
+                'ID'          => $new_code_id,
+                'post_title'  => $code,
+            );
+            wp_update_post($args);
+
+            update_post_meta( $new_code_id, 'tk_all_in_one_invite_code', $code );
+
+            $all_in_one_invite_codes_new_options['generate_codes'] = $generate_invite_code;
+            $all_in_one_invite_codes_new_options['type'] = 'any';
+            $all_in_one_invite_codes_new_options['multiple_use'] = true;
+            update_post_meta( $new_code_id, 'all_in_one_invite_codes_options', $all_in_one_invite_codes_new_options );
+            update_post_meta( $new_code_id, 'tk_all_in_one_invite_code_status', 'Active' );
+
+
+
+
+        }
+
+    }
     $order_meta =  $order->get_meta_data();
     $invite_code = false;
     foreach ($order_meta as $index=>$value){
@@ -101,6 +146,20 @@ function saveProductOptionsFields( $post_id, $post ) {
 	} else {
 		delete_post_meta( $post_id, 'invite_code' );
 	}
+
+    $sell_invite = isset( $_POST['sell_invite_code'] ) ? $_POST['sell_invite_code'] : false;
+    if ( $sell_invite ) {
+        update_post_meta( $post_id, 'sell_invite_code', $sell_invite );
+    } else {
+        delete_post_meta( $post_id, 'sell_invite_code' );
+    }
+
+    $aioic_generate_invites = isset( $_POST['invites_codes_amount'] ) ? $_POST['invites_codes_amount'] : false;
+    if ( $aioic_generate_invites ) {
+        update_post_meta( $post_id, 'invites_codes_amount', $aioic_generate_invites );
+    } else {
+        delete_post_meta( $post_id, 'invites_codes_amount' );
+    }
 }
 
 
@@ -109,19 +168,40 @@ function saveProductOptionsFields( $post_id, $post ) {
  */
 function addInviteCodeTabContent() {
 
-	$product_id = isset( $_GET['post'] ) ? $_GET['post'] : false;
-	$is_checked = '';
+	$product_id                  = isset( $_GET['post'] ) ? $_GET['post'] : false;
+	$is_checked                  = '';
+	$is_sell_invite_code_checked = '';
+	$generate_invite_code_value  = 0;
+    $generate_invite_code_visibility = 'style="display:none"';
 	if ( $product_id ) {
 
 		$result = get_post_meta( $product_id, 'invite_code', true );
 		if ( $result == 'on' ) {
 			$is_checked = 'checked="true"';
 		}
+		$is_sell_invite_code = get_post_meta( $product_id, 'sell_invite_code', true );
+		if ( $is_sell_invite_code == 'on' ) {
+			$is_sell_invite_code_checked = 'checked="true"';
+			$generate_invite_code_visibility = 'style="display:block"';
+		}
+		$generate_invite_code = get_post_meta( $product_id, 'invites_codes_amount', true );
+		if ( !empty($generate_invite_code)) {
+			$generate_invite_code_value = $generate_invite_code;
+		}
 	}
+	
 	echo '<div id="invite-code" class="panel woocommerce_options_panel wc-metaboxes-wrapper">';
 
 	echo '<p class="form-field"><label style="width: 50%">' . __( 'Make this product invite only ', 'all-in-one-invite-codes-woocommerce' ) . ' :</label>  <input style="margin-right: 15px;" type="checkbox" name="invite_only"' . $is_checked . ' > <i> ' . __( 'This will add an invite validation to the checkout', 'all-in-one-invite-codes-woocommerce' ) . ' </i></p>';
+	echo '<p class="form-field" id="sell_invite_codes"><label style="width: 50%">' . __( 'Sell Invite Codes', 'all-in-one-invite-codes-woocommerce' ) . ' :</label>  <input id="aioic_sell_invite_codes_chbx" style="margin-right: 15px;" type="checkbox" name="sell_invite_code"' . $is_sell_invite_code_checked . ' > <i> ' . __( 'A new Invite Code will be created when this product is purchased', 'all-in-one-invite-codes-woocommerce' ) . ' </i></p>';
+
+	echo '<p class="form-field" id="aioic_generate_invite_codes"'.$generate_invite_code_visibility.'><label style="width: 50%">' . __('Invite Codes to Generate', 'all-in-one-invite-codes-woocommerce') . ' :</label>  <input style="width: 25%;;" type="number" name="invites_codes_amount" value="' . $generate_invite_code_value . '" > <i style="padding-left: 10px; display:table;"> ' . __('Amount of Invite Code invitations that will be generated when this product is purchased', 'all-in-one-invite-codes-woocommerce') . ' </i></p>';
+
 	echo '</div>';
+
+	
+	
+	
 
 }
 

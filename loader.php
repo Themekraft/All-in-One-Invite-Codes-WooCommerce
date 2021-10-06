@@ -85,6 +85,7 @@ function aioic_woocommerce_purchase_complete($order_id)
 				update_post_meta($new_code_id, 'tk_all_in_one_invite_code', $code);
 
 				$all_in_one_invite_codes_new_options['generate_codes'] = $generate_invite_code;
+				$all_in_one_invite_codes_new_options['code_total'] = $generate_invite_code;
 				$all_in_one_invite_codes_new_options['type'] = 'any';
 				$all_in_one_invite_codes_new_options['multiple_use'] = true;
 				update_post_meta($new_code_id, 'all_in_one_invite_codes_options', $all_in_one_invite_codes_new_options);

@@ -1,0 +1,6 @@
+{
+
+  "require": {
+    "consolidation/robo": "^1.0.0"
+  }
+}

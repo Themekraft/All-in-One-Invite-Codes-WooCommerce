@@ -39,11 +39,6 @@ function aioic_woocommerce_load_plugin_textdomain()
 add_action('init', 'aioic_woocommerce_load_plugin_textdomain');
 add_action('admin_enqueue_scripts', 'aioic_woocommerce_admin_scripts', 100, 1);
 
-add_filter('woocommerce_product_data_tabs', 'addInviteCodeSection', 10, 1); // Add section
-add_action('woocommerce_product_data_panels', 'addInviteCodeTabContent'); // Add Section Tab content
-add_action('woocommerce_process_product_meta', 'saveProductOptionsFields', 12, 2); // Save option
-add_action('woocommerce_thankyou',  'aioic_woocommerce_purchase_complete');
-
 function aioic_woocommerce_admin_scripts()
 {
 	wp_enqueue_script('aioic_woocommerce_admin',  plugins_url('/', __FILE__) . 'assets/js/aioic_woocommerce.js', array('jquery'), false, true);
@@ -231,8 +226,8 @@ function all_in_one_invite_codes_checkout_field($checkout)
 	foreach ($woocommerce->cart->get_cart() as $cart_item_key => $values) {
 		$_product = $values['data'];
 
-		if ($_product->id) {
-			$result = get_post_meta($_product->id, 'invite_code', true);
+		if ($_product->get_id()) {
+			$result = get_post_meta($_product->get_id(), 'invite_code', true);
 			if ($result == 'on') {
 				$invite_only_in_cart = true;
 				break;
@@ -473,7 +468,7 @@ if (!function_exists('wc_fs')) {
 				'is_org_compliant' => false,
 				'trial'            => array(
 					'days'               => 7,
-					'is_require_payment' => false,
+					'is_require_payment' => true,
 				),
 				'parent'           => array(
 					'id'         => '3322',
@@ -485,6 +480,7 @@ if (!function_exists('wc_fs')) {
 					'first-path' => 'plugins.php',
 					'support'    => false,
 				),
+				'bundle_license_auto_activation' => true,
 			));
 		}
 
@@ -530,7 +526,12 @@ function wc_fs_init()
 		// Signal that the add-on's SDK was initiated.
 		do_action('wc_fs_loaded');
 
-		// Parent is active, add your init code here.
+		if( wc_fs()->is_plan('professional') || wc_fs()->is_trial() ){
+			add_filter('woocommerce_product_data_tabs', 'addInviteCodeSection', 10, 1); // Add section
+			add_action('woocommerce_product_data_panels', 'addInviteCodeTabContent'); // Add Section Tab content
+			add_action('woocommerce_process_product_meta', 'saveProductOptionsFields', 12, 2); // Save option
+			add_action('woocommerce_thankyou',  'aioic_woocommerce_purchase_complete');
+		}
 
 	} else {
 		// Parent is inactive, add your error handling here.

@@ -2,9 +2,9 @@
 Contributors: svenl77, gfirem, vmarin
 Tags: registration, invite only, invite codes,
 Requires at least: 4.9
-Tested up to: 5.7.2
+Tested up to: 6.1.1
 Requires PHP: 5.3
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 License: GPL 3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -15,6 +15,14 @@ Create invite only products
 Use Invite Codes in your Checkout
 
 == Changelog ==
+= 1.0.4 - 03 Jan 2022 =
+* Fixed issue with invite codes bulk process.
+* Added sell invite code feature.
+* Fixed issue on checkout form.
+* Added freemius plan validation.
+* Added bundle license auto activation.
+* Tested up to WordPress 6.1.1
+
 = 1.0.3 - 09 June   2021 =
 *Feature: Added custom email option
 

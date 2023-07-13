@@ -250,6 +250,93 @@ function all_in_one_invite_codes_checkout_field($checkout)
 	}
 }
 
+add_action( 'all_in_one_invite_codes_add_general_settings_option', 'all_in_one_invite_codes_woo_registration_form_settings', );
+function all_in_one_invite_codes_woo_registration_form_settings( $options ){
+	?>
+	<tr valign="top">
+		<th scope="row" valign="top">
+			<?php esc_html_e( 'Add Invite code field to WooCommerce registration form', 'all-in-one-invite-codes' ); ?>
+		</th>
+		<td>
+			<select name="all_in_one_invite_codes_general[woo_registration]" id="all_in_one_invite_codes_general_woo">
+				<?php $selected = (isset( $options['woo_registration'] ) && $options['woo_registration'] === 'disabled') ? 'selected' : '' ; ?>
+				<option value="disabled" <?php echo $selected; ?>>Disable</option>
+				<?php $selected = (isset( $options['woo_registration'] ) && $options['woo_registration'] === 'enabled') ? 'selected' : '' ; ?>
+				<option value="enabled" <?php echo $selected; ?>>Enable</option>
+        	</select>
+		</td>
+	</tr>
+
+	<?php
+}
+
+add_action( 'woocommerce_register_form', 'all_in_one_invite_codes_edit_woo_form', 15 );
+function all_in_one_invite_codes_add_invite_field_woo() {
+	$general_settings = get_option( 'all_in_one_invite_codes_general' );
+	if( ! empty( $general_settings ) && isset( $general_settings['woo_registration'] ) && 'enabled' === $general_settings['woo_registration'] ){
+		return apply_filters( 'woocommerce_forms_field', array(
+			'invite_code' => array(
+				'type'        => 'text',
+				'label'       => __( 'Invite code', 'all-in-one-invite-codes-woocommerce' ),
+				'placeholder' => __( 'Please enter a valid code', 'all-in-one-invite-codes-woocommerce' ),
+				'required'    => true,
+			),
+		) );
+	}
+}
+function all_in_one_invite_codes_edit_woo_form() {
+	$general_settings = get_option( 'all_in_one_invite_codes_general' );
+	if( ! empty( $general_settings ) && isset( $general_settings['woo_registration'] ) && 'enabled' === $general_settings['woo_registration'] ){
+		$fields = all_in_one_invite_codes_add_invite_field_woo();
+		foreach ( $fields as $key => $field_args ) {
+			woocommerce_form_field( $key, $field_args );
+		}
+	}
+}
+
+add_action('woocommerce_register_post', 'all_in_one_invite_codes_woo_validate_invite_field', 10, 3);
+function all_in_one_invite_codes_woo_validate_invite_field( $username, $email, $validation_errors ) {
+    if ( isset( $_POST['invite_code'] ) && empty( $_POST['invite_code'] ) ) {
+        $validation_errors->add( 'invite_code_error', __( '<strong>Error</strong>: Invite code is required!', 'all-in-one-invite-codes-woocommerce' ) );
+    }
+
+	$is_valid_code = all_in_one_invite_codes_validate_code( $_POST['invite_code'], $_POST['email'], 'any' );
+
+	if( is_array( $is_valid_code ) && isset( $is_valid_code['error'] ) ){
+		$validation_errors->add( 'invite_code_error', __( $is_valid_code['error'], 'all-in-one-invite-codes-woocommerce' ) );
+	}
+
+    return $validation_errors;
+}
+
+add_action('woocommerce_created_customer', 'all_in_one_invite_update_code_woo_registration_form', 10, 3);
+function all_in_one_invite_update_code_woo_registration_form( $customer_id, $new_customer_data, $password_generated  ){
+	
+	if( isset( $_POST['invite_code'] ) ){
+		$args  = array(
+			'post_type'  => 'tk_invite_codes',
+			'meta_query' => array(
+				array(
+					'key'     => 'tk_all_in_one_invite_code',
+					'value'   => $_POST['invite_code'],
+					'compare' => '=',
+				),
+			),
+		);
+		$query = new WP_Query( $args );
+	
+		// Get the invite code id
+		if ( $query->have_posts() ) {
+			while ( $query->have_posts() ) :
+				$query->the_post();
+				$post_parent_post_id = get_the_ID();
+			endwhile;
+		}
+		update_post_meta( $post_parent_post_id, 'tk_all_in_one_invite_code_status', 'Used' );
+	}
+
+}
+
 /**
  * Check if Conditional Product is In cart
  *
@@ -506,8 +593,8 @@ function wc_fs_is_parent_active()
 
 	foreach ($active_plugins as $basename) {
 		if (
-			0 === strpos($basename, 'all-in-one-invite-codes/') ||
-			0 === strpos($basename, 'all-in-one-invite-codes-premium/')
+			0 === strpos(strtolower($basename), 'all-in-one-invite-codes/') ||
+			0 === strpos(strtolower($basename), 'all-in-one-invite-codes-premium/')
 		) {
 			return true;
 		}
